@@ -46,7 +46,7 @@ var UI;
         },
 
         onresize: function (callback) {
-            if (UI.getSetting('resize')) {
+            if (UI.getSetting('resize') === 'remote') {
                 var innerW = window.innerWidth;
                 var innerH = window.innerHeight;
                 var controlbarH = $D('noVNC-control-bar').offsetHeight;
@@ -104,7 +104,7 @@ var UI;
             UI.initSetting('encrypt', (window.location.protocol === "https:"));
             UI.initSetting('true_color', true);
             UI.initSetting('cursor', !UI.isTouchDevice);
-            UI.initSetting('resize', false);
+            UI.initSetting('resize', 'off');
             UI.initSetting('shared', true);
             UI.initSetting('view_only', false);
             UI.initSetting('path', 'websockify');
@@ -135,9 +135,10 @@ var UI;
                 UI.setMouseButton();
                 // Remove the address bar
                 setTimeout(function() { window.scrollTo(0, 1); }, 100);
-                UI.forceSetting('clip', true);
-            } else {
-                UI.initSetting('clip', false);
+                if (UI.getSetting('resize') === 'off') {
+                    // if nothing is selected, default to clip
+                    UI.updateSetting('resize', 'clip');
+                }
             }
 
             //iOS Safari does not support CSS position:fixed.
@@ -453,7 +454,6 @@ var UI;
                     UI.updateSetting('cursor', !UI.isTouchDevice);
                     $D('noVNC_cursor').disabled = true;
                 }
-                UI.updateSetting('clip');
                 UI.updateSetting('resize');
                 UI.updateSetting('shared');
                 UI.updateSetting('view_only');
@@ -506,7 +506,6 @@ var UI;
             if (UI.rfb.get_display().get_cursor_uri()) {
                 UI.saveSetting('cursor');
             }
-            UI.saveSetting('clip');
             UI.saveSetting('resize');
             UI.saveSetting('shared');
             UI.saveSetting('view_only');
@@ -624,7 +623,6 @@ var UI;
                 UI.updateSetting('cursor', !UI.isTouchDevice);
                 $D('noVNC_cursor').disabled = true;
             }
-            $D('noVNC_clip').disabled = connected || UI.isTouchDevice;
             $D('noVNC_resize').disabled = connected;
             $D('noVNC_shared').disabled = connected;
             $D('noVNC_view_only').disabled = connected;
@@ -775,20 +773,20 @@ var UI;
 
             if (typeof(clip) !== 'boolean') {
                 // Use current setting
-                clip = UI.getSetting('clip');
+                clip = UI.getSetting('resize') === 'clip';
             }
 
             if (clip && !cur_clip) {
                 // Turn clipping on
-                UI.updateSetting('clip', true);
+                UI.updateSetting('resize', 'clip');
             } else if (!clip && cur_clip) {
                 // Turn clipping off
-                UI.updateSetting('clip', false);
+                UI.updateSetting('resize', 'off');
                 display.set_viewport(false);
                 $D('noVNC_canvas').style.position = 'static';
                 display.viewportChangeSize();
             }
-            if (UI.getSetting('clip')) {
+            if (UI.getSetting('resize') === 'clip') {
                 // If clipping, update clipping settings
                 $D('noVNC_canvas').style.position = 'absolute';
                 var pos = Util.getPosition($D('noVNC_canvas'));
