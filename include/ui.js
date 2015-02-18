@@ -46,15 +46,61 @@ var UI;
         },
 
         onresize: function (callback) {
-            if (UI.getSetting('resize') === 'remote') {
-                var innerW = window.innerWidth;
-                var innerH = window.innerHeight;
-                var controlbarH = $D('noVNC-control-bar').offsetHeight;
-                // For some unknown reason the container is higher than the canvas,
-                // 5px higher in Firefox and 4px higher in Chrome
-                var padding = 5;
-                if (innerW !== undefined && innerH !== undefined)
-                    UI.rfb.setDesktopSize(innerW, innerH - controlbarH - padding);
+            var innerW = window.innerWidth;
+            var innerH = window.innerHeight;
+            var controlbarH = $D('noVNC-control-bar').offsetHeight;
+            // For some unknown reason the container is higher than the canvas,
+            // 5px higher in Firefox and 4px higher in Chrome
+            var padding = 5;
+            var effectiveH = innerH - controlbarH - padding;
+
+            if (innerW !== undefined && innerH !== undefined) {
+                var scaleType = UI.getSetting('resize');
+                if (scaleType === 'remote') {
+                    // use remote resizing
+                    Util.Debug('Attempting setDesktopSize(' + innerW + ', ' + effectiveH + ')');
+                    UI.rfb.setDesktopSize(innerW, effectiveH);
+                } else if (scaleType === 'scale' || scaleType === 'downscale') {
+                    var downscaleOnly = scaleType === 'downscale';
+                    // use local scaling
+                    var display = UI.rfb.get_display();
+
+                    var fbAspectRatio = display.get_width() / display.get_height();
+                    var targetAspectRatio = innerW / effectiveH;
+
+                    var canvas = $D('noVNC_canvas');
+                    // NB(directxman12): If you set the width directly, or set the
+                    //                   style width to a number, the canvas is cleared.
+                    //                   However, if you set the style width to a string
+                    //                   ('NNNpx'), the canvas is scaled without clearing.
+                    var scaleRatio;
+                    var targetW;
+                    var targetH;
+
+                    if (fbAspectRatio >= targetAspectRatio) {
+                        scaleRatio = innerW / display.get_width();
+                    } else {
+                        scaleRatio = effectiveH / display.get_height();
+                    }
+
+                    if (scaleRatio > 1.0 && downscaleOnly) {
+                        targetH = display.get_height();
+                        targetW = display.get_width();
+                        scaleRatio = 1.0;
+                    } else if (fbAspectRatio >= targetAspectRatio) {
+                        targetW = innerW;
+                        targetH = innerW / fbAspectRatio;
+                    } else {
+                        targetW = effectiveH * fbAspectRatio;
+                        targetH = effectiveH;
+                    }
+
+                    UI.rfb.get_mouse().set_scale(scaleRatio);
+                    canvas.style.width = targetW + 'px';
+                    canvas.style.height = targetH + 'px';
+
+                    Util.Debug('Scaling by ' + UI.rfb.get_mouse().get_scale());
+                }
             }
         },
 
