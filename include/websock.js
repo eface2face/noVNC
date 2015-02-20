@@ -162,8 +162,12 @@ function Websock() {
                     }
                     this._rQi -= goback;
                 }
+                // ibc
+                console.log('---ibc: Websock:rQwait() returns true | [msg:"%s", num:%d, goback:%s]', msg, num, goback);
                 return true; // true means need more data
             }
+            // ibc
+            console.log('---ibc: Websock:rQwait() returns false | [msg:"%s", num:%d, goback:%s]', msg, num, goback);
             return false;
         },
 
@@ -334,6 +338,17 @@ function Websock() {
             if (this._mode === 'binary') {
                 // push arraybuffer values onto the end
                 var u8 = new Uint8Array(data);
+
+                // ibc: dump u8.
+                var ua2hex = function(ua) {
+                    var h = '';
+                    for (var i = 0; i < ua.length; i++) {
+                        h += " 0x" + ua[i].toString(16);
+                    }
+                    return h;
+                }
+                console.log('---ibc: WS received data in hex: %s', ua2hex(u8));
+
                 for (var i = 0; i < u8.length; i++) {
                     this._rQ.push(u8[i]);
                 }

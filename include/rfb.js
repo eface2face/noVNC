@@ -131,6 +131,7 @@ var RFB;
             'wsProtocols': ['binary', 'base64'],    // Protocols to use in the WebSocket connection
             'repeaterID': '',                       // [UltraVNC] RepeaterID to connect to
             'viewportDrag': false,                  // Move the viewport on mouse drags
+            'forceAuthScheme': 0,                   // Force auth type (0 means no)
 
             // Callback functions
             'onUpdateState': function () { },       // onUpdateState(rfb, state, oldstate, statusMsg): state update/change
@@ -699,10 +700,16 @@ var RFB;
                 this._rfb_auth_scheme = 0;
                 var types = this._sock.rQshiftBytes(num_types);
                 Util.Debug("Server security types: " + types);
-                for (var i = 0; i < types.length; i++) {
-                    if (types[i] > this._rfb_auth_scheme && (types[i] <= 16 || types[i] == 22)) {
-                        this._rfb_auth_scheme = types[i];
+
+                if (! this._forceAuthScheme) {
+                    for (var i = 0; i < types.length; i++) {
+                        if (types[i] > this._rfb_auth_scheme && (types[i] <= 16 || types[i] == 22)) {
+                            this._rfb_auth_scheme = types[i];
+                        }
                     }
+                }
+                else {
+                    this._rfb_auth_scheme = this._forceAuthScheme;
                 }
 
                 if (this._rfb_auth_scheme === 0) {
@@ -1236,6 +1243,7 @@ var RFB;
         ['wsProtocols', 'rw', 'arr'],           // Protocols to use in the WebSocket connection
         ['repeaterID', 'rw', 'str'],            // [UltraVNC] RepeaterID to connect to
         ['viewportDrag', 'rw', 'bool'],         // Move the viewport on mouse drags
+        ['forceAuthScheme', 'rw', 'int'],       // Force auth type (0 means no)
 
         // Callback functions
         ['onUpdateState', 'rw', 'func'],        // onUpdateState(rfb, state, oldstate, statusMsg): RFB state update/change

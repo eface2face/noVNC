@@ -110,13 +110,16 @@ var UI;
             UI.initSetting('path', 'websockify');
             UI.initSetting('repeaterID', '');
 
-            UI.rfb = new RFB({'target': $D('noVNC_canvas'),
-                              'onUpdateState': UI.updateState,
-                              'onXvpInit': UI.updateXvpVisualState,
-                              'onClipboard': UI.clipReceive,
-                              'onFBUComplete': UI.FBUComplete,
-                              'onFBResize': UI.updateViewDragButton,
-                              'onDesktopName': UI.updateDocumentTitle});
+            UI.rfb = new RFB({
+                'target': $D('noVNC_canvas'),
+                'forceAuthScheme': 1,  // ibc
+                'onUpdateState': UI.updateState,
+                'onXvpInit': UI.updateXvpVisualState,
+                'onClipboard': UI.clipReceive,
+                'onFBUComplete': UI.FBUComplete,
+                'onFBResize': UI.updateViewDragButton,
+                'onDesktopName': UI.updateDocumentTitle
+            });
 
             var autoconnect = WebUtil.getQueryVar('autoconnect', false);
             if (autoconnect === 'true' || autoconnect == '1') {
